@@ -509,6 +509,13 @@ class LibVirtMachinery(Machinery):
         except libvirt.libvirtError as e:
             raise CuckooMachineError(f"Unable to restore snapshot on virtual machine {label}. Your snapshot MUST BE in running state!") from e
 
+        if self._status(label) != self.RUNNING:
+            log.debug("VM %s is not running after revert, starting it", label)
+            try:
+                vm.create()
+            except libvirt.libvirtError as e:
+                raise CuckooMachineError(f"Unable to start virtual machine {label} after snapshot revert") from e
+
         # Check state.
         self._wait_status(label, self.RUNNING)
 
